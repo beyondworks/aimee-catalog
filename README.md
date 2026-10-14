@@ -102,4 +102,27 @@ gh release create v<version> catalog.json catalog.json.sig --title "catalog v<ve
 |---|---|
 | 운영 키를 잃음(유출 아님) | 비밀번호 관리자의 예비 키를 키체인 `aimee-catalog-signing` / `backup` 항목으로 잠시 넣고(`security add-generic-password -s aimee-catalog-signing -a backup -w`, 값은 물을 때 붙여 넣기), `node scripts/sign.mjs catalog.json --key backup`으로 서명해 냅니다. 쓴 뒤 그 항목을 지웁니다. |
 | 운영 키가 유출됨 | 예비 키로, `revokedKeys`에 운영 키 id를 넣은 목록을 서명해 냅니다. 앱은 그 뒤 운영 키 서명을 거부합니다. 다음 앱 판에서 키를 교체합니다. |
+| 예비 키를 잃음(운영 키는 있음) | 아래 "예비 키를 잃었을 때" 순서대로 새 예비 키를 만듭니다. 잃은 예비 키는 비밀 값이 아무 데도 없으니 폐기 목록에 넣지 않아도 됩니다. |
 | 두 키를 모두 잃음 | 새 앱 판을 내야 합니다. 그동안 앱은 내장 목록과 마지막 정상 목록으로 동작합니다. |
+
+### 예비 키를 잃었을 때
+
+운영 키가 키체인에 그대로 있고 예비 키의 비밀 값만 잃었을 때의 순서입니다. 운영 키는 건드리지 않습니다.
+
+1. 발행하는 맥에서 예비 키만 새로 만듭니다.
+
+   ```
+   cd ~/aimee-catalog && git pull && node scripts/generate-backup.mjs
+   ```
+
+   - 키체인 임시 항목 `aimee-catalog-signing` / `backup-temporary`에만 넣습니다. 그 항목이 이미 있으면 아무것도 만들지 않고 멈춥니다.
+   - 출력은 새 공개키와 키 id 한 줄입니다(비밀 값은 출력하지 않습니다). 이 줄을 Aimee 앱 담당에게 보냅니다.
+2. 키체인 접근 앱에서 `Aimee catalog signing (backup-temporary)` 항목의 "암호 보기"로 값을 복사해 비밀번호 관리자에 새 항목으로 저장합니다.
+3. **비밀번호 관리자에서 그 항목을 다시 열어 값이 들어 있는 것을 확인한 뒤에** 키체인의 임시 항목을 지웁니다.
+
+   ```
+   security delete-generic-password -s aimee-catalog-signing -a backup-temporary
+   ```
+
+4. Aimee 앱의 고정 공개키(`src/main/tools/catalog-keys.ts`)에서 옛 예비 키 줄을 새 키로 바꾼 판을 냅니다. 그 판을 쓰는 앱부터 새 예비 키 서명을 받아들입니다.
+
