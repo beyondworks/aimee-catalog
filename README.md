@@ -108,8 +108,9 @@ gh release create v<version> catalog.json catalog.json.sig --title "catalog v<ve
 ### 예비 키를 잃었을 때
 
 운영 키가 키체인에 그대로 있고 예비 키의 비밀 값만 잃었을 때의 순서입니다. 운영 키는 건드리지 않습니다.
+예비 키는 서명에 쓰지 않으므로 어느 맥에서 만들어도 됩니다. 만든 맥의 키체인에 임시 항목이 생깁니다.
 
-1. 발행하는 맥에서 예비 키만 새로 만듭니다.
+1. 예비 키만 새로 만듭니다(어느 맥이든 됩니다).
 
    ```
    cd ~/aimee-catalog && git pull && node scripts/generate-backup.mjs
